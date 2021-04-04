@@ -1,57 +1,59 @@
-package com.mashibing.dp.cor;
+package com.mashibing.dp.chainofresponsibility;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
+        Msg msg = new Msg();
+        msg.setMsg("大家好:)，<script>，欢迎访问 mashibing.com ，大家都是996 ");
 
-
-        Msg m = new Msg();
-        m.setMessage("大家好:)，欢迎大家访问 mashibing.com ，大家伙儿基本996哦， <script>");
-
-        //Filter[] filters = {new HTMLFilter(), new SensitiveFilter()};
         FilterChain fc = new FilterChain();
         fc.add(new HTMLFilter())
                 .add(new SensitiveFilter());
+
         FilterChain fc2 = new FilterChain();
         fc2.add(new FaceFilter()).add(new URLFilter());
+
         fc.add(fc2);
 
-        fc.doFilter(m);
+        fc.doFilter(msg);
+        System.out.println(msg);
 
-        System.out.println(m);
     }
 }
 
 class Msg {
-    String username;
-    String message;
+    String name;
+    String msg;
 
-    public String getMessage() {
-        return message;
+    public String getMsg() {
+        return msg;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public void setMsg(String msg) {
+        this.msg = msg;
     }
 
     @Override
     public String toString() {
         return "Msg{" +
-                "message='" + message + '\'' +
+                "msg='" + msg + '\'' +
                 '}';
     }
 }
 
-interface Filter { boolean doFilter(Msg m);}
+interface Filter {
+    boolean doFilter(Msg m);
+}
 
 class HTMLFilter implements Filter {
     @Override
     public boolean doFilter(Msg m) {
-        String r = m.getMessage();
-        r = r.replaceAll("<", "[").replaceAll(">", "]");
-        m.setMessage(r);
+        String r = m.getMsg();
+        r = r.replace('<', '[');
+        r = r.replace('>', ']');
+        m.setMsg(r);
         return true;
     }
 }
@@ -59,9 +61,9 @@ class HTMLFilter implements Filter {
 class SensitiveFilter implements Filter {
     @Override
     public boolean doFilter(Msg m) {
-        String r = m.getMessage();
-        r = m.getMessage().replaceAll("996", "955");
-        m.setMessage(r);
+        String r = m.getMsg();
+        r = r.replaceAll("996", "955");
+        m.setMsg(r);
         return false;
     }
 }
@@ -69,9 +71,9 @@ class SensitiveFilter implements Filter {
 class FaceFilter implements Filter {
     @Override
     public boolean doFilter(Msg m) {
-        String r = m.getMessage();
-        r = m.getMessage().replaceAll(":\\)", "^V^");
-        m.setMessage(r);
+        String r = m.getMsg();
+        r = r.replace(":)", "^V^");
+        m.setMsg(r);
         return true;
     }
 }
@@ -79,22 +81,22 @@ class FaceFilter implements Filter {
 class URLFilter implements Filter {
     @Override
     public boolean doFilter(Msg m) {
-        String r = m.getMessage();
-        r = m.getMessage().replaceAll("mashibing.com", "http://www.mashibing.com");
-        m.setMessage(r);
+        String r = m.getMsg();
+        r = r.replace("mashibing.com", "http://www.mashibing.com");
+        m.setMsg(r);
         return true;
     }
 }
 
-class FilterChain implements  Filter{
+class FilterChain implements Filter {
     private List<Filter> filters = new ArrayList<>();
-    public FilterChain add(Filter filter) {
-        this.filters.add(filter);
+
+    public FilterChain add(Filter f) {
+        filters.add(f);
         return this;
     }
 
     public boolean doFilter(Msg m) {
-
         for(Filter f : filters) {
             if(!f.doFilter(m)) return false;
         }

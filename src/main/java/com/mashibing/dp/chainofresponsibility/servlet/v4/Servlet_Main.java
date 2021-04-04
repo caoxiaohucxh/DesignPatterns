@@ -1,4 +1,4 @@
-package com.mashibing.dp.cor.servlet.v3;
+package com.mashibing.dp.chainofresponsibility.servlet.v4;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +12,7 @@ public class Servlet_Main {
 
         FilterChain chain = new FilterChain();
         chain.add(new HTMLFilter()).add(new SensitiveFilter());
-        chain.doFilter(request, response, chain);
+        chain.doFilter(request, response);
         System.out.println(request.str);
         System.out.println(response.str);
 
@@ -20,16 +20,16 @@ public class Servlet_Main {
 }
 
 interface Filter {
-    boolean doFilter(Request request, Response response, FilterChain chain);
+    void doFilter(Request request, Response response, FilterChain chain);
 }
 
 class HTMLFilter implements Filter {
     @Override
-    public boolean doFilter(Request request, Response response, FilterChain chain) {
+    public void doFilter(Request request, Response response, FilterChain chain) {
         request.str = request.str.replaceAll("<", "[").replaceAll(">", "]") + "HTMLFilter()";
-        chain.doFilter(request, response, chain);
+        chain.doFilter(request, response);
         response.str += "--HTMLFilter()";
-        return true;
+
     }
 }
 
@@ -43,16 +43,16 @@ class Response {
 
 class SensitiveFilter implements Filter {
     @Override
-    public boolean doFilter(Request request, Response response, FilterChain chain) {
+    public void doFilter(Request request, Response response, FilterChain chain) {
         request.str = request.str.replaceAll("996", "955") + " SensitiveFilter()";
-        chain.doFilter(request, response, chain);
+        chain.doFilter(request, response);
         response.str += "--SensitiveFilter()";
-        return true;
+
     }
 }
 
 
-class FilterChain implements Filter {
+class FilterChain {
     List<Filter> filters = new ArrayList<>();
     int index = 0;
 
@@ -61,11 +61,11 @@ class FilterChain implements Filter {
         return this;
     }
 
-    public boolean doFilter(Request request, Response response, FilterChain chain) {
-        if(index == filters.size()) return false;
+    public void doFilter(Request request, Response response) {
+        if(index == filters.size()) return;
         Filter f = filters.get(index);
         index ++;
 
-        return f.doFilter(request, response, chain);
+        f.doFilter(request, response, this);
     }
 }

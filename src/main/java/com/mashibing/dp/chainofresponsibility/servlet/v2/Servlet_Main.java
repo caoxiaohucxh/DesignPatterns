@@ -1,4 +1,4 @@
-package com.mashibing.dp.cor.servlet.v4;
+package com.mashibing.dp.chainofresponsibility.servlet.v2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,16 +20,15 @@ public class Servlet_Main {
 }
 
 interface Filter {
-    void doFilter(Request request, Response response, FilterChain chain);
+    boolean doFilter(Request request, Response response);
 }
 
 class HTMLFilter implements Filter {
     @Override
-    public void doFilter(Request request, Response response, FilterChain chain) {
-        request.str = request.str.replaceAll("<", "[").replaceAll(">", "]") + "HTMLFilter()";
-        chain.doFilter(request, response);
+    public boolean doFilter(Request request, Response response) {
+        request.str = request.str.replaceAll("<", "[").replaceAll(">", "]");
         response.str += "--HTMLFilter()";
-
+        return true;
     }
 }
 
@@ -43,29 +42,27 @@ class Response {
 
 class SensitiveFilter implements Filter {
     @Override
-    public void doFilter(Request request, Response response, FilterChain chain) {
-        request.str = request.str.replaceAll("996", "955") + " SensitiveFilter()";
-        chain.doFilter(request, response);
+    public boolean doFilter(Request request, Response response) {
+        request.str = request.str.replaceAll("996", "955");
         response.str += "--SensitiveFilter()";
-
+        return true;
     }
 }
 
 
-class FilterChain {
+class FilterChain implements Filter {
     List<Filter> filters = new ArrayList<>();
-    int index = 0;
 
     public FilterChain add(Filter f) {
         filters.add(f);
         return this;
     }
 
-    public void doFilter(Request request, Response response) {
-        if(index == filters.size()) return;
-        Filter f = filters.get(index);
-        index ++;
+    public boolean doFilter(Request request, Response response) {
 
-        f.doFilter(request, response, this);
+        for(Filter f : filters ){
+            f.doFilter(request, response);
+        }
+        return true;
     }
 }
